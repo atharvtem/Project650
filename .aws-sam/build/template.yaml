@@ -245,6 +245,13 @@ Resources:
             Ref: UserDataTable
       - Statement:
         - Effect: Allow
+          Action: dynamodb:TransactWriteItems
+          Resource:
+            Fn::GetAtt:
+            - UserDataTable
+            - Arn
+      - Statement:
+        - Effect: Allow
           Action: bedrock:InvokeModel
           Resource:
             Fn::Sub: arn:${AWS::Partition}:bedrock:${AWS::Region}::foundation-model/${ChatModelId}

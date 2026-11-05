@@ -1,5 +1,6 @@
 """HTTP API for the Fieldnote demo storefront."""
 import json
+import logging
 import os
 import re
 import uuid
@@ -8,6 +9,8 @@ from decimal import Decimal
 
 import boto3
 from boto3.dynamodb.conditions import Attr, Key
+
+logger = logging.getLogger(__name__)
 
 dynamodb = boto3.resource("dynamodb")
 products_table = dynamodb.Table(os.environ["PRODUCTS_TABLE"])
@@ -110,16 +113,19 @@ def checkout(user_id):
     order = {"userId": user_id, "sk": f"ORDER#{now}#{order_id}", "orderId": order_id, "createdAt": now,
              "items": lines, "total": total, "status": "SIMULATED"}
     # Store the immutable order snapshot and clear its cart as one atomic write.
-    dynamodb.meta.client.transact_write_items(TransactItems=[
-        {"Put": {"TableName": user_data_table.name, "Item": {k: _av(v) for k, v in order.items()}}},
-        {"Put": {"TableName": user_data_table.name, "Item": {k: _av(v) for k, v in {"userId": user_id, "sk": "CART", "items": {}, "updatedAt": now}.items()}}},
-    ])
+    try:
+        dynamodb.meta.client.transact_write_items(TransactItems=[
+            {"Put": {"TableName": user_data_table.name, "Item": order}},
+            {"Put": {"TableName": user_data_table.name, "Item": {"userId": user_id, "sk": "CART", "items": {}, "updatedAt": now}}},
+        ])
+    except dynamodb.meta.client.exceptions.TransactionCanceledException as exc:
+        reasons = exc.response.get("CancellationReasons", [])
+        logger.error("Checkout transaction cancellation reasons: %s", [
+            {"code": reason.get("Code"), "message": reason.get("Message")}
+            for reason in reasons
+        ])
+        raise
     return response(201, {"order": order})
-
-
-def _av(value):
-    from boto3.dynamodb.types import TypeSerializer
-    return TypeSerializer().serialize(value)
 
 
 def list_orders(user_id):
@@ -197,4 +203,5 @@ def handler(event, _context):
         return response(400, {"error": str(exc)})
     except Exception:
         # Do not expose internal errors or user data in API responses.
+        logger.exception("Unhandled storefront API request failed")
         return response(500, {"error": "Something went wrong. Please try again."})
