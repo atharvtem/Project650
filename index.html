@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f7f7f2">
+  <title>Fieldnote — thoughtful things for everyday life</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="announcement">A little more intention in every day <span>·</span> Free shipping on orders over $75</div>
+  <header class="site-header">
+    <a class="brand" href="#home" aria-label="Fieldnote home"><span class="brand-mark">f.</span><span>fieldnote</span></a>
+    <nav class="main-nav" aria-label="Main navigation">
+      <a class="active" href="#shop">Shop all</a><a href="#shop" data-category-link="Home">Home</a><a href="#shop" data-category-link="Carry">Carry</a><a href="#shop" data-category-link="Wellness">Wellness</a>
+    </nav>
+    <div class="header-actions">
+      <button class="icon-button search-toggle" aria-label="Search products" title="Search">⌕</button>
+      <button class="account-button" id="accountButton"><span class="account-icon">♙</span><span id="accountLabel">Sign in</span></button>
+      <button class="cart-button" id="cartButton" aria-label="Open cart">Bag <span class="cart-count" id="cartCount">0</span></button>
+      <button class="mobile-menu" id="mobileMenu" aria-label="Open menu">☰</button>
+    </div>
+  </header>
+  <main id="home">
+    <section class="hero">
+      <div class="hero-copy">
+        <div class="eyebrow"><span class="eyebrow-line"></span> Objects for a considered life</div>
+        <h1>Make room for<br><em>the everyday.</em></h1>
+        <p>Useful things, made beautifully. Thoughtful essentials for wherever the day takes you.</p>
+        <a class="primary-link" href="#shop">Explore the collection <span>↗</span></a>
+        <div class="hero-note"><span class="note-dot"></span> Small-batch finds, chosen with care</div>
+      </div>
+      <div class="hero-art" aria-label="Warm, sunlit still life of home goods">
+        <div class="hero-image">
+          <div class="sun-disc"></div><div class="hero-vase"></div><div class="hero-book book-one"></div><div class="hero-book book-two"></div>
+          <div class="hero-caption"><span>01 / 03</span><span>Objects with a purpose</span></div>
+        </div>
+        <div class="hero-stamp"><span>GOOD<br>THINGS</span><b>✳</b></div>
+      </div>
+    </section>
+    <section class="trust-strip"><span>Considered design</span><i></i><span>Made to last</span><i></i><span>Better, by choice</span><i></i><span>Ships with care</span></section>
+    <section class="shop-section" id="shop">
+      <div class="section-heading"><div><div class="eyebrow"><span class="eyebrow-line"></span> The collection</div><h2>Find your <em>everyday.</em></h2></div><p>Good design has a way of making ordinary moments feel a little more special.</p></div>
+      <div class="shop-toolbar">
+        <div class="category-tabs" id="categoryTabs" role="tablist" aria-label="Product categories"></div>
+        <div class="toolbar-right"><label class="search-field"><span>⌕</span><input id="searchInput" type="search" placeholder="Search the collection" aria-label="Search the collection"></label><label class="sort-select"><span class="sr-only">Sort products</span><select id="sortSelect"><option value="featured">Featured</option><option value="low">Price: low to high</option><option value="high">Price: high to low</option><option value="name">Name: A to Z</option></select></label></div>
+      </div>
+      <div class="active-filters" id="activeFilters"></div>
+      <div class="product-grid" id="productGrid" aria-live="polite"></div>
+      <div class="empty-state hidden" id="emptyState"><span>⌕</span><h3>No little treasures found</h3><p>Try a different search or category.</p><button class="text-button" id="clearFilters">Clear filters</button></div>
+      <div class="catalog-foot"><span id="productCount"></span><button class="text-button" id="showAll">View all products <span>↓</span></button></div>
+    </section>
+    <section class="manifesto"><div class="manifesto-art"><div class="manifesto-sun"></div><span class="manifesto-word">FIELD<br>NOTES</span><div class="manifesto-object"></div></div><div class="manifesto-copy"><div class="eyebrow"><span class="eyebrow-line"></span> Our point of view</div><h2>Less, but<br><em>more meaningful.</em></h2><p>We believe the things we keep close should earn their place. Each piece in our collection is chosen for its thoughtful details, honest materials, and ability to make daily rituals feel a little more like your own.</p><a href="#shop" class="underlined-link">A note on good things <span>↗</span></a></div></section>
+    <section class="newsletter"><div><div class="eyebrow"><span class="eyebrow-line"></span> Notes from the shop</div><h2>A good thing, <em>every now and then.</em></h2><p>New finds, quiet inspiration, and 10% off your first order.</p></div><form id="newsletterForm" class="newsletter-form"><label class="sr-only" for="newsletterEmail">Email address</label><input id="newsletterEmail" type="email" placeholder="Your email address" required><button type="submit">Count me in <span>↗</span></button><small id="newsletterMessage">By subscribing, you agree to our very reasonable emails.</small></form></section>
+  </main>
+  <footer class="site-footer"><a class="brand" href="#home"><span class="brand-mark">f.</span><span>fieldnote</span></a><p>Thoughtful things for everyday life.</p><div class="footer-links"><a href="#shop">Shop</a><a href="#shop">Our story</a><a href="#shop">Contact</a></div><small>© 2025 Fieldnote. Made for the everyday.</small></footer>
+
+  <div class="overlay" id="overlay"></div>
+  <aside class="side-panel cart-panel" id="cartPanel" aria-label="Shopping bag" aria-hidden="true"><div class="panel-header"><div><span class="eyebrow">Your selection</span><h3>Your bag <span id="panelCount">(0)</span></h3></div><button class="close-button" data-close aria-label="Close cart">×</button></div><div id="cartItems" class="cart-items"></div><div id="cartEmpty" class="cart-empty"><span class="empty-bag">◯</span><h4>Your bag is taking a breather.</h4><p>There are plenty of good things to discover.</p><button class="primary-button" data-close>Explore the collection</button></div><div id="cartSummary" class="cart-summary"><div class="shipping-note" id="shippingNote"></div><div class="summary-line"><span>Subtotal</span><strong id="cartSubtotal">$0.00</strong></div><small>Shipping and taxes calculated at checkout.</small><button class="primary-button full" id="checkoutButton">Continue to checkout <span>→</span></button><div class="secure-note">⌑ &nbsp; A simple, secure checkout</div></div></aside>
+  <section class="modal" id="productModal" aria-modal="true" role="dialog" aria-hidden="true"><button class="close-button modal-close" data-close aria-label="Close product details">×</button><div id="productModalContent"></div></section>
+  <section class="modal auth-modal" id="authModal" aria-modal="true" role="dialog" aria-hidden="true"><button class="close-button modal-close" data-close aria-label="Close sign in">×</button><div class="auth-mark">f.</div><span class="eyebrow">Welcome to Fieldnote</span><h3 id="authTitle">Good to see you.</h3><p id="authIntro">Sign in to keep your cart and orders close at hand.</p><form id="authForm"><label>Email address<input type="email" id="authEmail" required placeholder="you@example.com"></label><label>Password<input type="password" id="authPassword" required minlength="6" placeholder="At least 6 characters"></label><button class="primary-button full" id="authSubmit">Sign in <span>→</span></button></form><button class="text-button auth-switch" id="authSwitch">New here? Create an account</button><p class="demo-note">Demo mode: account details stay in this browser.</p></section>
+  <section class="modal checkout-modal" id="checkoutModal" aria-modal="true" role="dialog" aria-hidden="true"><button class="close-button modal-close" data-close aria-label="Close checkout">×</button><div id="checkoutContent"></div></section>
+  <section class="modal orders-modal" id="ordersModal" aria-modal="true" role="dialog" aria-hidden="true"><button class="close-button modal-close" data-close aria-label="Close orders">×</button><span class="eyebrow">Your Fieldnote account</span><h3>Order history</h3><div id="ordersContent"></div></section>
+  <aside class="side-panel chat-panel" id="chatPanel" aria-label="Fieldnote assistant" aria-hidden="true"><div class="panel-header"><div><span class="eyebrow">A helpful little guide</span><h3>Ask Fieldnote <span>✳</span></h3></div><button class="close-button" data-close aria-label="Close assistant">×</button></div><div class="chat-welcome" id="chatWelcome"><div class="chat-orb">✳</div><h4>Looking for something?</h4><p>Ask about materials, gifts, or the little things that make a product special.</p><div class="suggestions"><button>Help me find a thoughtful gift</button><button>Show me something for a slow morning</button></div></div><div class="chat-messages" id="chatMessages"></div><form class="chat-input" id="chatForm"><input id="chatInput" placeholder="Ask me anything…" autocomplete="off" aria-label="Message Fieldnote"><button aria-label="Send message">↑</button></form><div class="chat-disclaimer">A friendly demo assistant, learning from our collection.</div></aside>
+  <button class="chat-launcher" id="chatLauncher" aria-label="Ask Fieldnote assistant"><span class="chat-launcher-spark">✳</span><span>Ask Fieldnote</span></button>
+  <div class="toast" id="toast" role="status"></div>
+  <script src="app.js"></script>
+</body>
+</html>

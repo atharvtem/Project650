@@ -1,0 +1,170 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Fieldnote storefront API, Cognito authentication, and DynamoDB data tables.
+
+Parameters:
+  AllowedOrigin:
+    Type: String
+    Default: http://localhost:8000
+    Description: Exact frontend origin allowed by API CORS. Update after CloudFront is deployed.
+  ChatModelId:
+    Type: String
+    Default: anthropic.claude-3-haiku-20240307-v1:0
+    Description: Bedrock model ID available in the selected AWS region.
+
+Globals:
+  Function:
+    Runtime: python3.12
+    Timeout: 15
+    MemorySize: 256
+    Architectures: [arm64]
+    Environment:
+      Variables:
+        PRODUCTS_TABLE: !Ref ProductsTable
+        USER_DATA_TABLE: !Ref UserDataTable
+        CHAT_MODEL_ID: !Ref ChatModelId
+
+Resources:
+  StoreApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      CorsConfiguration:
+        AllowOrigins: [!Ref AllowedOrigin]
+        AllowHeaders: [authorization, content-type]
+        AllowMethods: [GET, POST, PUT, DELETE, OPTIONS]
+        MaxAge: 600
+      Auth:
+        Authorizers:
+          CognitoAuthorizer:
+            IdentitySource: "$request.header.Authorization"
+            JwtConfiguration:
+              issuer: !Sub "https://cognito-idp.${AWS::Region}.amazonaws.com/${UserPool}"
+              audience: [!Ref UserPoolClient]
+        DefaultAuthorizer: CognitoAuthorizer
+
+  UserPool:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      UserPoolName: !Sub "fieldnote-users-${AWS::StackName}"
+      UsernameAttributes: [email]
+      AutoVerifiedAttributes: [email]
+      Policies:
+        PasswordPolicy:
+          MinimumLength: 8
+          RequireLowercase: true
+          RequireNumbers: true
+          RequireSymbols: false
+          RequireUppercase: true
+      AccountRecoverySetting:
+        RecoveryMechanisms:
+          - Name: verified_email
+            Priority: 1
+      Schema:
+        - Name: email
+          Required: true
+          Mutable: true
+
+  UserPoolClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      UserPoolId: !Ref UserPool
+      ClientName: fieldnote-browser
+      GenerateSecret: false
+      ExplicitAuthFlows:
+        - ALLOW_USER_PASSWORD_AUTH
+        - ALLOW_USER_SRP_AUTH
+        - ALLOW_REFRESH_TOKEN_AUTH
+      PreventUserExistenceErrors: ENABLED
+      AccessTokenValidity: 1
+      IdTokenValidity: 1
+      RefreshTokenValidity: 7
+      TokenValidityUnits:
+        AccessToken: hours
+        IdToken: hours
+        RefreshToken: days
+
+  ProductsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: productId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: productId
+          KeyType: HASH
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: false
+
+  UserDataTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: userId
+          AttributeType: S
+        - AttributeName: sk
+          AttributeType: S
+      KeySchema:
+        - AttributeName: userId
+          KeyType: HASH
+        - AttributeName: sk
+          KeyType: RANGE
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: false
+
+  StoreFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ../backend/
+      Handler: app.handler
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ProductsTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref UserDataTable
+        - Statement:
+            - Effect: Allow
+              Action: bedrock:InvokeModel
+              Resource: !Sub "arn:${AWS::Partition}:bedrock:${AWS::Region}::foundation-model/${ChatModelId}"
+      Events:
+        ListProducts:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref StoreApi
+            Path: /products
+            Method: GET
+            Auth:
+              Authorizer: NONE
+        GetCart:
+          Type: HttpApi
+          Properties: { ApiId: !Ref StoreApi, Path: /cart, Method: GET }
+        AddCartItem:
+          Type: HttpApi
+          Properties: { ApiId: !Ref StoreApi, Path: /cart/items, Method: POST }
+        UpdateCartItem:
+          Type: HttpApi
+          Properties: { ApiId: !Ref StoreApi, Path: /cart/items/{productId}, Method: PUT }
+        DeleteCartItem:
+          Type: HttpApi
+          Properties: { ApiId: !Ref StoreApi, Path: /cart/items/{productId}, Method: DELETE }
+        ListOrders:
+          Type: HttpApi
+          Properties: { ApiId: !Ref StoreApi, Path: /orders, Method: GET }
+        CreateOrder:
+          Type: HttpApi
+          Properties: { ApiId: !Ref StoreApi, Path: /orders, Method: POST }
+        Chat:
+          Type: HttpApi
+          Properties: { ApiId: !Ref StoreApi, Path: /chat, Method: POST }
+
+Outputs:
+  ApiUrl:
+    Description: API Gateway HTTP API URL
+    Value: !Sub "https://${StoreApi}.execute-api.${AWS::Region}.${AWS::URLSuffix}"
+  UserPoolId:
+    Value: !Ref UserPool
+  UserPoolClientId:
+    Value: !Ref UserPoolClient
+  ProductsTableName:
+    Value: !Ref ProductsTable
