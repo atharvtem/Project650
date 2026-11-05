@@ -1,37 +1,51 @@
 # AWS deployment handoff
 
-The AWS template in `infra/template.yaml` creates a Cognito user pool and browser client, a public product route, protected cart/order/chat routes, one Python Lambda, and two on-demand DynamoDB tables. The storefront is not wired to these endpoints yet; this file records the deployment setup for the next integration slice.
+## Deployed status
 
-## Before the first deploy
+The `fieldnote-store` stack is deployed in `us-east-1`. It currently includes Cognito, API Gateway, Lambda, two on-demand DynamoDB tables, a private S3 frontend bucket, and CloudFront. The 15 sample products are loaded.
 
-The project owner will need to:
+- Storefront: https://d29smamqrn6vkt.cloudfront.net/
+- Public catalog API: https://jamjl4xlnk.execute-api.us-east-1.amazonaws.com/products
+- Cognito sign-in is served through the user pool's hosted UI.
 
-1. Choose the AWS account and region for the class demo. Use one region for Cognito, Lambda, DynamoDB, and Bedrock.
-2. Create an AWS Budget alert in Billing before deploying. A budget alert sends a notification but does not stop usage.
-3. Confirm that AWS SAM CLI and AWS credentials are available on the deployment machine. Do not send access keys in chat or commit them.
-4. Check Bedrock model availability and enable/request access for the selected model in that region. The default is Claude 3 Haiku; the region/account may require a different model ID or inference profile.
-5. Approve the CloudFormation change set when deploying. It creates billable AWS resources.
+The website and public catalog endpoint have returned HTTP 200. The remaining deployment check is a user-driven sign-up and authenticated end-to-end flow. The demo account and chat should then be checked in the browser.
 
-Those steps need your AWS account and approval. I can prepare and review the code before then; I cannot access your AWS sign-in or approve changes in your account.
+## User step: create a test account
+
+Open the storefront, select **Sign in**, then choose **Sign up** on the Cognito page. Complete the email verification code sent to you. Keep your password and verification code private; they are entered directly into AWS Cognito's hosted page, not into this chat. After sign-in, try adding a product to the bag, refreshing the page, placing a simulated order, checking order history, and asking the assistant a catalog question.
+
+## Account and cost ownership
+
+The project owner controls AWS account access. Before future deployments, confirm:
+
+1. The intended account and region (`us-east-1`) are still selected.
+2. The $5 monthly budget alert remains active. It sends an alert but does not stop spending.
+3. AWS CLI and SAM are installed and authenticated locally. Never send access keys in chat or commit them.
+4. Amazon Nova Lite (`amazon.nova-lite-v1:0`) is the configured chat model. The first Bedrock invocation may reveal account-specific model availability or permissions.
+5. Review the CloudFormation change set before applying future stack changes.
+
+I cannot access your AWS sign-in. Enter passwords and email verification codes only in the Cognito page.
 
 ## Deploy outline
 
-From the repository root, after prerequisites are ready:
+For a future infrastructure change, from the repository root:
 
 ```sh
 sam build --template-file infra/template.yaml
 sam deploy --guided --template-file .aws-sam/build/template.yaml
 ```
 
-Choose a descriptive stack name, the intended region, and allow SAM to create the deployment-role resources it requests. Set `AllowedOrigin` to the local origin for development (`http://localhost:8000`), then to the exact CloudFront origin after frontend hosting is added. Set `ChatModelId` to the model ID available in that region. Keep the generated stack outputs private to the project team; they are configuration identifiers, not access keys.
+Keep the existing stack name `fieldnote-store` and region `us-east-1`. The deployed `AllowedOrigin` is the CloudFront website origin. The stack's Cognito callback URLs include both the CloudFront URL and `http://localhost:8000` for local development. Keep generated identifiers in frontend config only; they are not access keys.
 
-After deployment, load sample catalog rows:
+After a stack deployment, refresh the browser configuration, seed catalog rows if needed, and publish the frontend files:
 
 ```sh
-PRODUCTS_TABLE=<ProductsTableName output> python3 scripts/seed_catalog.py
+python3 scripts/write_frontend_config.py
+AWS_REGION=us-east-1 PRODUCTS_TABLE=<ProductsTableName output> python3 scripts/seed_catalog.py
+python3 scripts/publish_frontend.py
 ```
 
-The API URL, user pool ID, and browser client ID are outputs. These values can be used in frontend configuration once the browser app is connected to Cognito and the API. No real payment data is collected; checkout only writes a simulated order.
+No real payment data is collected; checkout only writes a simulated order.
 
 ## Cleanup
 

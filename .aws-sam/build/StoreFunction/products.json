@@ -1,0 +1,257 @@
+[
+  {
+    "productId": "stoneware-mug",
+    "name": "Everyday Stoneware Mug",
+    "category": "Home",
+    "price": 28,
+    "tag": "Bestseller",
+    "color": "Warm clay",
+    "description": "A hand-finished mug for the first coffee and the last cup of tea.",
+    "details": [
+      "Hand-finished stoneware",
+      "12 oz / 355 ml capacity",
+      "Dishwasher and microwave safe"
+    ],
+    "active": true,
+    "tone": "clay",
+    "shape": "mug"
+  },
+  {
+    "productId": "linen-market-tote",
+    "name": "Linen Market Tote",
+    "category": "Carry",
+    "price": 42,
+    "tag": "Made to last",
+    "color": "Natural flax",
+    "description": "Room for the market run, the library book, and whatever comes next.",
+    "details": [
+      "European flax linen",
+      "Interior pocket and reinforced handles",
+      "Machine washable"
+    ],
+    "active": true,
+    "tone": "sand",
+    "shape": "tote"
+  },
+  {
+    "productId": "quiet-morning-candle",
+    "name": "Quiet Morning Candle",
+    "category": "Wellness",
+    "price": 34,
+    "tag": "Small batch",
+    "color": "Soft ivory",
+    "description": "Soft cedar, bergamot, and the feeling of having nowhere to be.",
+    "details": [
+      "Coconut soy wax blend",
+      "45 hour burn time",
+      "Reusable glass vessel"
+    ],
+    "active": true,
+    "tone": "rose",
+    "shape": "candle"
+  },
+  {
+    "productId": "daily-journal",
+    "name": "The Daily Journal",
+    "category": "Paper",
+    "price": 24,
+    "tag": "Good start",
+    "color": "Ochre",
+    "description": "A little space to gather your thoughts and let the day unfold.",
+    "details": [
+      "FSC-certified 100 gsm paper",
+      "160 lined pages",
+      "Lay-flat clothbound cover"
+    ],
+    "active": true,
+    "tone": "blue",
+    "shape": "book"
+  },
+  {
+    "productId": "ceramic-bud-vase",
+    "name": "Little Things Bud Vase",
+    "category": "Home",
+    "price": 36,
+    "tag": "Handmade",
+    "color": "Sage",
+    "description": "A small reminder that one stem can change a whole room.",
+    "details": [
+      "Wheel-thrown stoneware",
+      "Each piece is one of a kind",
+      "Watertight glazed interior"
+    ],
+    "active": true,
+    "tone": "green",
+    "shape": "vase"
+  },
+  {
+    "productId": "weekend-scarf",
+    "name": "Weekend Wool Scarf",
+    "category": "Carry",
+    "price": 68,
+    "tag": "Natural fibers",
+    "color": "Field green",
+    "description": "Light enough for a breeze, warm enough to stay a little longer.",
+    "details": [
+      "Recycled wool and alpaca blend",
+      "Naturally temperature regulating",
+      "Made in a family-run mill"
+    ],
+    "active": true,
+    "tone": "sand",
+    "shape": "scarf"
+  },
+  {
+    "productId": "botanical-hand-wash",
+    "name": "Botanical Hand Wash",
+    "category": "Wellness",
+    "price": 26,
+    "tag": "Plant based",
+    "color": "Amber",
+    "description": "A bright, gentle wash with notes of wild herbs and citrus peel.",
+    "details": [
+      "Plant-derived ingredients",
+      "Refillable amber glass bottle",
+      "Not tested on animals"
+    ],
+    "active": true,
+    "tone": "yellow",
+    "shape": "bottle"
+  },
+  {
+    "productId": "soft-light-lamp",
+    "name": "Soft Light Table Lamp",
+    "category": "Home",
+    "price": 96,
+    "tag": "Thoughtful design",
+    "color": "Linen",
+    "description": "A warm pool of light for slow evenings and bedside reading.",
+    "details": [
+      "FSC-certified ash wood base",
+      "Warm LED bulb included",
+      "Made in small runs"
+    ],
+    "active": true,
+    "tone": "lilac",
+    "shape": "lamp"
+  },
+  {
+    "productId": "morning-ceramic-plate",
+    "name": "Morning Ceramic Plate",
+    "category": "Home",
+    "price": 32,
+    "tag": "Handmade",
+    "color": "Mist",
+    "description": "An everyday plate with a quiet, hand-painted edge.",
+    "details": [
+      "Hand-glazed stoneware",
+      "8.5 inch diameter",
+      "Dishwasher safe"
+    ],
+    "active": true,
+    "tone": "blue",
+    "shape": "plate"
+  },
+  {
+    "productId": "pocket-notebook-set",
+    "name": "Pocket Notebook Set",
+    "category": "Paper",
+    "price": 18,
+    "tag": "Set of three",
+    "color": "Mixed",
+    "description": "For lists, passing thoughts, and ideas worth keeping.",
+    "details": [
+      "Three pocket-sized notebooks",
+      "Recycled paper pages",
+      "Saddle-stitched binding"
+    ],
+    "active": true,
+    "tone": "rose",
+    "shape": "book"
+  },
+  {
+    "productId": "slow-sunday-tray",
+    "name": "Slow Sunday Catchall",
+    "category": "Home",
+    "price": 38,
+    "tag": "Natural wood",
+    "color": "Walnut",
+    "description": "A landing place for keys, rings, and small daily rituals.",
+    "details": [
+      "Responsibly sourced walnut",
+      "Hand-sanded and oil finished",
+      "Each grain pattern is unique"
+    ],
+    "active": true,
+    "tone": "clay",
+    "shape": "tray"
+  },
+  {
+    "productId": "sipping-glass-set",
+    "name": "Sunday Sipping Glasses",
+    "category": "Home",
+    "price": 44,
+    "tag": "Set of two",
+    "color": "Clear",
+    "description": "Simple, sturdy glasses that make water feel like an occasion.",
+    "details": [
+      "Set of two hand-blown glasses",
+      "Recycled glass",
+      "Dishwasher safe"
+    ],
+    "active": true,
+    "tone": "green",
+    "shape": "glass"
+  },
+  {
+    "productId": "canvas-lunch-bag",
+    "name": "Everyday Lunch Bag",
+    "category": "Carry",
+    "price": 39,
+    "tag": "Good habit",
+    "color": "Natural",
+    "description": "A reusable carryall for lunches, snacks, and small adventures.",
+    "details": [
+      "Organic cotton canvas",
+      "Easy-clean insulated lining",
+      "Made without plastic coating"
+    ],
+    "active": true,
+    "tone": "yellow",
+    "shape": "tote"
+  },
+  {
+    "productId": "evening-wind-down-oil",
+    "name": "Evening Wind Down Oil",
+    "category": "Wellness",
+    "price": 30,
+    "tag": "Plant based",
+    "color": "Forest",
+    "description": "A grounding blend of lavender and cedar for the end of the day.",
+    "details": [
+      "Organic jojoba and essential oils",
+      "10 ml glass roller bottle",
+      "Patch test before use"
+    ],
+    "active": true,
+    "tone": "green",
+    "shape": "bottle"
+  },
+  {
+    "productId": "good-ideas-book",
+    "name": "A Book of Good Ideas",
+    "category": "Paper",
+    "price": 22,
+    "tag": "Staff pick",
+    "color": "Stone",
+    "description": "A gentle prompt each day to notice what is already good.",
+    "details": [
+      "Guided journal with 90 prompts",
+      "Responsibly sourced paper",
+      "Designed for five quiet minutes"
+    ],
+    "active": true,
+    "tone": "sand",
+    "shape": "book"
+  }
+]

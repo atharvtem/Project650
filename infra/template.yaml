@@ -9,7 +9,7 @@ Parameters:
     Description: Exact frontend origin allowed by API CORS. Update after CloudFront is deployed.
   ChatModelId:
     Type: String
-    Default: anthropic.claude-3-haiku-20240307-v1:0
+    Default: amazon.nova-lite-v1:0
     Description: Bedrock model ID available in the selected AWS region.
 
 Globals:
@@ -75,6 +75,16 @@ Resources:
         - ALLOW_USER_SRP_AUTH
         - ALLOW_REFRESH_TOKEN_AUTH
       PreventUserExistenceErrors: ENABLED
+      AllowedOAuthFlowsUserPoolClient: true
+      AllowedOAuthFlows: [code]
+      AllowedOAuthScopes: [email, openid, profile]
+      SupportedIdentityProviders: [COGNITO]
+      CallbackURLs:
+        - http://localhost:8000
+        - !Sub "https://${WebsiteDistribution.DomainName}"
+      LogoutURLs:
+        - http://localhost:8000
+        - !Sub "https://${WebsiteDistribution.DomainName}"
       AccessTokenValidity: 1
       IdTokenValidity: 1
       RefreshTokenValidity: 7
@@ -82,6 +92,12 @@ Resources:
         AccessToken: hours
         IdToken: hours
         RefreshToken: days
+
+  UserPoolDomain:
+    Type: AWS::Cognito::UserPoolDomain
+    Properties:
+      Domain: !Sub "fieldnote-${AWS::AccountId}"
+      UserPoolId: !Ref UserPool
 
   ProductsTable:
     Type: AWS::DynamoDB::Table
@@ -112,6 +128,80 @@ Resources:
           KeyType: RANGE
       PointInTimeRecoverySpecification:
         PointInTimeRecoveryEnabled: false
+
+  FrontendBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+
+  FrontendOriginAccessControl:
+    Type: AWS::CloudFront::OriginAccessControl
+    Properties:
+      OriginAccessControlConfig:
+        Name: !Sub "${AWS::StackName}-frontend-oac"
+        Description: CloudFront access to the private Fieldnote frontend bucket
+        OriginAccessControlOriginType: s3
+        SigningBehavior: always
+        SigningProtocol: sigv4
+
+  WebsiteDistribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Enabled: true
+        DefaultRootObject: index.html
+        Comment: !Sub "Fieldnote storefront ${AWS::StackName}"
+        HttpVersion: http2and3
+        PriceClass: PriceClass_100
+        Origins:
+          - Id: FieldnoteS3Origin
+            DomainName: !GetAtt FrontendBucket.RegionalDomainName
+            OriginAccessControlId: !Ref FrontendOriginAccessControl
+            S3OriginConfig:
+              OriginAccessIdentity: ""
+        DefaultCacheBehavior:
+          TargetOriginId: FieldnoteS3Origin
+          ViewerProtocolPolicy: redirect-to-https
+          AllowedMethods: [GET, HEAD, OPTIONS]
+          CachedMethods: [GET, HEAD, OPTIONS]
+          Compress: true
+          CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6
+        CustomErrorResponses:
+          - ErrorCode: 403
+            ResponseCode: 200
+            ResponsePagePath: /index.html
+            ErrorCachingMinTTL: 0
+          - ErrorCode: 404
+            ResponseCode: 200
+            ResponsePagePath: /index.html
+            ErrorCachingMinTTL: 0
+        ViewerCertificate:
+          CloudFrontDefaultCertificate: true
+
+  FrontendBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref FrontendBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: AllowCloudFrontReadOnly
+            Effect: Allow
+            Principal:
+              Service: cloudfront.amazonaws.com
+            Action: s3:GetObject
+            Resource: !Sub "${FrontendBucket.Arn}/*"
+            Condition:
+              StringEquals:
+                AWS:SourceArn: !Sub "arn:${AWS::Partition}:cloudfront::${AWS::AccountId}:distribution/${WebsiteDistribution}"
 
   StoreFunction:
     Type: AWS::Serverless::Function
@@ -144,10 +234,10 @@ Resources:
           Properties: { ApiId: !Ref StoreApi, Path: /cart/items, Method: POST }
         UpdateCartItem:
           Type: HttpApi
-          Properties: { ApiId: !Ref StoreApi, Path: /cart/items/{productId}, Method: PUT }
+          Properties: { ApiId: !Ref StoreApi, Path: "/cart/items/{productId}", Method: PUT }
         DeleteCartItem:
           Type: HttpApi
-          Properties: { ApiId: !Ref StoreApi, Path: /cart/items/{productId}, Method: DELETE }
+          Properties: { ApiId: !Ref StoreApi, Path: "/cart/items/{productId}", Method: DELETE }
         ListOrders:
           Type: HttpApi
           Properties: { ApiId: !Ref StoreApi, Path: /orders, Method: GET }
@@ -168,3 +258,13 @@ Outputs:
     Value: !Ref UserPoolClient
   ProductsTableName:
     Value: !Ref ProductsTable
+  WebsiteUrl:
+    Description: CloudFront URL for the storefront
+    Value: !Sub "https://${WebsiteDistribution.DomainName}"
+  CloudFrontDistributionId:
+    Value: !Ref WebsiteDistribution
+  FrontendBucketName:
+    Value: !Ref FrontendBucket
+  CognitoHostedUiUrl:
+    Description: Cognito hosted sign-in base URL
+    Value: !Sub "https://${UserPoolDomain}.auth.${AWS::Region}.amazoncognito.com"

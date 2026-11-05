@@ -14,7 +14,9 @@ The frontend files are static, but the app is dynamic: browser JavaScript calls 
 
 ## Status
 
-The first local storefront slice is in place. It includes a responsive sample catalog, search and category filters, product details, a browser-persisted cart, demo account flow, simulated checkout, order history, and a catalog-aware assistant prototype. The local account and assistant behavior is for UI development only; AWS Cognito and Bedrock integration are still ahead.
+The storefront is deployed to CloudFront and its product catalog is served by the live API backed by DynamoDB. Cognito Hosted UI is configured for account sign-in. Cart, simulated checkout, order history, and Bedrock chat are wired to the protected API; they still need an end-to-end pass with a real test account. No payment processing is included.
+
+**Live storefront:** [Fieldnote (working name)](https://d29smamqrn6vkt.cloudfront.net/)
 
 ## Run locally
 

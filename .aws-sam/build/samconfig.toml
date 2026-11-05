@@ -1,0 +1,13 @@
+version = 0.1
+
+[default.deploy.parameters]
+stack_name = "fieldnote-store"
+resolve_s3 = true
+s3_prefix = "fieldnote-store"
+confirm_changeset = true
+capabilities = "CAPABILITY_IAM"
+parameter_overrides = "AllowedOrigin=\"https://d29smamqrn6vkt.cloudfront.net\" ChatModelId=\"amazon.nova-lite-v1:0\""
+image_repositories = []
+
+[default.global.parameters]
+region = "us-east-1"

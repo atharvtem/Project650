@@ -153,8 +153,9 @@ def chat(user_id, question):
               f"CATALOG RECORDS:\n{json.dumps(json_safe(context))}\n\nSHOPPER QUESTION:\n{question}")
     try:
         result = bedrock.invoke_model(modelId=CHAT_MODEL_ID, contentType="application/json", accept="application/json",
-            body=json.dumps({"anthropic_version": "bedrock-2023-05-31", "max_tokens": 220, "temperature": 0.2, "messages": [{"role": "user", "content": prompt}]}))
-        answer = json.loads(result["body"].read())["content"][0]["text"]
+            body=json.dumps({"messages": [{"role": "user", "content": [{"text": prompt}]}],
+                             "inferenceConfig": {"maxTokens": 220, "temperature": 0.2}}))
+        answer = json.loads(result["body"].read())["output"]["message"]["content"][0]["text"]
         return response(200, {"answer": answer, "products": context})
     except Exception:
         return response(503, {"error": "The product guide is temporarily unavailable."})

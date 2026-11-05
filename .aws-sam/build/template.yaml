@@ -1,0 +1,339 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Fieldnote storefront API, Cognito authentication, and DynamoDB data tables.
+Parameters:
+  AllowedOrigin:
+    Type: String
+    Default: http://localhost:8000
+    Description: Exact frontend origin allowed by API CORS. Update after CloudFront
+      is deployed.
+  ChatModelId:
+    Type: String
+    Default: amazon.nova-lite-v1:0
+    Description: Bedrock model ID available in the selected AWS region.
+Globals:
+  Function:
+    Runtime: python3.12
+    Timeout: 15
+    MemorySize: 256
+    Architectures:
+    - arm64
+    Environment:
+      Variables:
+        PRODUCTS_TABLE:
+          Ref: ProductsTable
+        USER_DATA_TABLE:
+          Ref: UserDataTable
+        CHAT_MODEL_ID:
+          Ref: ChatModelId
+Resources:
+  StoreApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      CorsConfiguration:
+        AllowOrigins:
+        - Ref: AllowedOrigin
+        AllowHeaders:
+        - authorization
+        - content-type
+        AllowMethods:
+        - GET
+        - POST
+        - PUT
+        - DELETE
+        - OPTIONS
+        MaxAge: 600
+      Auth:
+        Authorizers:
+          CognitoAuthorizer:
+            IdentitySource: $request.header.Authorization
+            JwtConfiguration:
+              issuer:
+                Fn::Sub: https://cognito-idp.${AWS::Region}.amazonaws.com/${UserPool}
+              audience:
+              - Ref: UserPoolClient
+        DefaultAuthorizer: CognitoAuthorizer
+  UserPool:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      UserPoolName:
+        Fn::Sub: fieldnote-users-${AWS::StackName}
+      UsernameAttributes:
+      - email
+      AutoVerifiedAttributes:
+      - email
+      Policies:
+        PasswordPolicy:
+          MinimumLength: 8
+          RequireLowercase: true
+          RequireNumbers: true
+          RequireSymbols: false
+          RequireUppercase: true
+      AccountRecoverySetting:
+        RecoveryMechanisms:
+        - Name: verified_email
+          Priority: 1
+      Schema:
+      - Name: email
+        Required: true
+        Mutable: true
+  UserPoolClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      UserPoolId:
+        Ref: UserPool
+      ClientName: fieldnote-browser
+      GenerateSecret: false
+      ExplicitAuthFlows:
+      - ALLOW_USER_PASSWORD_AUTH
+      - ALLOW_USER_SRP_AUTH
+      - ALLOW_REFRESH_TOKEN_AUTH
+      PreventUserExistenceErrors: ENABLED
+      AllowedOAuthFlowsUserPoolClient: true
+      AllowedOAuthFlows:
+      - code
+      AllowedOAuthScopes:
+      - email
+      - openid
+      - profile
+      SupportedIdentityProviders:
+      - COGNITO
+      CallbackURLs:
+      - http://localhost:8000
+      - Fn::Sub: https://${WebsiteDistribution.DomainName}
+      LogoutURLs:
+      - http://localhost:8000
+      - Fn::Sub: https://${WebsiteDistribution.DomainName}
+      AccessTokenValidity: 1
+      IdTokenValidity: 1
+      RefreshTokenValidity: 7
+      TokenValidityUnits:
+        AccessToken: hours
+        IdToken: hours
+        RefreshToken: days
+  UserPoolDomain:
+    Type: AWS::Cognito::UserPoolDomain
+    Properties:
+      Domain:
+        Fn::Sub: fieldnote-${AWS::AccountId}
+      UserPoolId:
+        Ref: UserPool
+  ProductsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+      - AttributeName: productId
+        AttributeType: S
+      KeySchema:
+      - AttributeName: productId
+        KeyType: HASH
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: false
+  UserDataTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+      - AttributeName: userId
+        AttributeType: S
+      - AttributeName: sk
+        AttributeType: S
+      KeySchema:
+      - AttributeName: userId
+        KeyType: HASH
+      - AttributeName: sk
+        KeyType: RANGE
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: false
+  FrontendBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+        - ServerSideEncryptionByDefault:
+            SSEAlgorithm: AES256
+  FrontendOriginAccessControl:
+    Type: AWS::CloudFront::OriginAccessControl
+    Properties:
+      OriginAccessControlConfig:
+        Name:
+          Fn::Sub: ${AWS::StackName}-frontend-oac
+        Description: CloudFront access to the private Fieldnote frontend bucket
+        OriginAccessControlOriginType: s3
+        SigningBehavior: always
+        SigningProtocol: sigv4
+  WebsiteDistribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Enabled: true
+        DefaultRootObject: index.html
+        Comment:
+          Fn::Sub: Fieldnote storefront ${AWS::StackName}
+        HttpVersion: http2and3
+        PriceClass: PriceClass_100
+        Origins:
+        - Id: FieldnoteS3Origin
+          DomainName:
+            Fn::GetAtt:
+            - FrontendBucket
+            - RegionalDomainName
+          OriginAccessControlId:
+            Ref: FrontendOriginAccessControl
+          S3OriginConfig:
+            OriginAccessIdentity: ''
+        DefaultCacheBehavior:
+          TargetOriginId: FieldnoteS3Origin
+          ViewerProtocolPolicy: redirect-to-https
+          AllowedMethods:
+          - GET
+          - HEAD
+          - OPTIONS
+          CachedMethods:
+          - GET
+          - HEAD
+          - OPTIONS
+          Compress: true
+          CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6
+        CustomErrorResponses:
+        - ErrorCode: 403
+          ResponseCode: 200
+          ResponsePagePath: /index.html
+          ErrorCachingMinTTL: 0
+        - ErrorCode: 404
+          ResponseCode: 200
+          ResponsePagePath: /index.html
+          ErrorCachingMinTTL: 0
+        ViewerCertificate:
+          CloudFrontDefaultCertificate: true
+  FrontendBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket:
+        Ref: FrontendBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Sid: AllowCloudFrontReadOnly
+          Effect: Allow
+          Principal:
+            Service: cloudfront.amazonaws.com
+          Action: s3:GetObject
+          Resource:
+            Fn::Sub: ${FrontendBucket.Arn}/*
+          Condition:
+            StringEquals:
+              AWS:SourceArn:
+                Fn::Sub: arn:${AWS::Partition}:cloudfront::${AWS::AccountId}:distribution/${WebsiteDistribution}
+  StoreFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: StoreFunction
+      Handler: app.handler
+      Policies:
+      - DynamoDBCrudPolicy:
+          TableName:
+            Ref: ProductsTable
+      - DynamoDBCrudPolicy:
+          TableName:
+            Ref: UserDataTable
+      - Statement:
+        - Effect: Allow
+          Action: bedrock:InvokeModel
+          Resource:
+            Fn::Sub: arn:${AWS::Partition}:bedrock:${AWS::Region}::foundation-model/${ChatModelId}
+      Events:
+        ListProducts:
+          Type: HttpApi
+          Properties:
+            ApiId:
+              Ref: StoreApi
+            Path: /products
+            Method: GET
+            Auth:
+              Authorizer: NONE
+        GetCart:
+          Type: HttpApi
+          Properties:
+            ApiId:
+              Ref: StoreApi
+            Path: /cart
+            Method: GET
+        AddCartItem:
+          Type: HttpApi
+          Properties:
+            ApiId:
+              Ref: StoreApi
+            Path: /cart/items
+            Method: POST
+        UpdateCartItem:
+          Type: HttpApi
+          Properties:
+            ApiId:
+              Ref: StoreApi
+            Path: /cart/items/{productId}
+            Method: PUT
+        DeleteCartItem:
+          Type: HttpApi
+          Properties:
+            ApiId:
+              Ref: StoreApi
+            Path: /cart/items/{productId}
+            Method: DELETE
+        ListOrders:
+          Type: HttpApi
+          Properties:
+            ApiId:
+              Ref: StoreApi
+            Path: /orders
+            Method: GET
+        CreateOrder:
+          Type: HttpApi
+          Properties:
+            ApiId:
+              Ref: StoreApi
+            Path: /orders
+            Method: POST
+        Chat:
+          Type: HttpApi
+          Properties:
+            ApiId:
+              Ref: StoreApi
+            Path: /chat
+            Method: POST
+    Metadata:
+      SamResourceId: StoreFunction
+Outputs:
+  ApiUrl:
+    Description: API Gateway HTTP API URL
+    Value:
+      Fn::Sub: https://${StoreApi}.execute-api.${AWS::Region}.${AWS::URLSuffix}
+  UserPoolId:
+    Value:
+      Ref: UserPool
+  UserPoolClientId:
+    Value:
+      Ref: UserPoolClient
+  ProductsTableName:
+    Value:
+      Ref: ProductsTable
+  WebsiteUrl:
+    Description: CloudFront URL for the storefront
+    Value:
+      Fn::Sub: https://${WebsiteDistribution.DomainName}
+  CloudFrontDistributionId:
+    Value:
+      Ref: WebsiteDistribution
+  FrontendBucketName:
+    Value:
+      Ref: FrontendBucket
+  CognitoHostedUiUrl:
+    Description: Cognito hosted sign-in base URL
+    Value:
+      Fn::Sub: https://${UserPoolDomain}.auth.${AWS::Region}.amazoncognito.com

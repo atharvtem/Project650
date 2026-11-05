@@ -4,6 +4,8 @@
 
 **AWS-Based E-Commerce Storefront with AI Chatbot**
 
+**Storefront brand:** Fieldnote is a working name introduced during implementation. It is not specified by the course handout or a team-approved project commitment; confirm the final name with the team before the presentation.
+
 The team will build and deploy a cloud-based storefront on AWS. Users will register and sign in, browse and filter products, maintain a persistent cart, complete a simulated checkout, see prior orders, and ask a conversational assistant questions about the active product catalog.
 
 ## Professor-expectations checklist
